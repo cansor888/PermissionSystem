@@ -1,0 +1,48 @@
+{
+  "homeInfo": {
+    "title": "系统管理",
+    "href": "pages/welcome.html"
+  },
+  "logoInfo": {
+    "title": "后台管理",
+    "image": "images/logo.png",
+    "href": ""
+  },
+  "menuInfo": [
+    {
+      "title": "常规管理",
+      "icon": "fa fa-address-book",
+      "href": "",
+      "target": "_self",
+      "child": [
+        {
+
+          "title": "用户管理",
+          "href": "user",
+          "icon": "fa fa-window-maximize",
+          "target": "_self"
+        },
+		
+        {
+          "title": "菜单管理",
+          "href": "menu",
+          "icon": "fa fa-window-maximize",
+          "target": "_self"
+        },
+        {
+          "title": "角色管理",
+          "href": "role",
+          "icon": "fa fa-window-maximize",
+          "target": "_self"
+        },
+        {
+          "title": "部门管理",
+          "href": "dept",
+          "icon": "fa fa-window-maximize",
+          "target": "_self"
+        }
+        ]
+    }
+
+  ]
+}

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>menu</title>
+    <link rel="stylesheet"  th:href="@{lib/layui-v2.5.5/css/layui.css}" media="all">
+    <link rel="stylesheet" th:href="@{css/public.css}"   media="all">
+    <style>
+        .layui-btn:not(.layui-btn-lg ):not(.layui-btn-sm):not(.layui-btn-xs) {
+            height: 34px;
+            line-height: 34px;
+            padding: 0 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <div>
+            <div class="layui-btn-group">
+                <button class="layui-btn" id="btn-expand">全部展开</button>
+                <button class="layui-btn layui-btn-normal" id="btn-fold">全部折叠</button>
+            </div>
+            <table id="munu-table" class="layui-table" lay-filter="munu-table"></table>
+        </div>
+    </div>
+</div>
+<!-- 操作列 根据类型的不同显示不同的操作按钮 -->
+<script type="text/html" id="auth-state">
+    {{#  if(d.type== '2'){ }}
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    {{#  } else { }}
+        <a class="layui-btn layui-btn-red layui-btn-xs" lay-event="add">添加</a>
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">修改</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    {{#  } }}
+</script>
+
+<script  th:src="@{lib/layui-v2.5.5/layui.js}"  charset="utf-8"></script>
+<script th:src="@{js/lay-config.js?v=1.0.4}"  charset="utf-8"></script>
+
+<script>
+    layui.use(['table', 'treetable','form'], function () {
+        var $ = layui.jquery;
+        var table = layui.table;
+        var treetable = layui.treetable;
+        var form = layui.form;
+        // 渲染表格
+        layer.load(2);
+        treetable.render({
+            treeColIndex: 1,
+            treeSpid: -1, //从-1开始，需要最先级别-1
+            treeIdName: 'id',
+            treePidName: 'parentId',
+            elem: '#munu-table',
+            url: 'dept/deptAll',
+            page: false,
+            cols: [
+                [
+                {type: 'numbers'},
+                {field: 'name', width: 250, title: '部门名称'},
+                    {field: 'type', width: 200, title: '类型名称',
+                        templet:function(res){
+                        if(res.type=='0'){
+                            return '<span  class="layui-bg-red">公司</span>'
+                        }else if(res.type=='1'){
+                            return '<span class="layui-bg-orange">部门</span>'
+                        }else{
+                            return '<span class="layui-bg-green">科室/小组</span>'
+                        }
+                      }
+                    },
+                    {field: 'status', width: 100, title: '状态',
+                        templet:function(res){
+                            if(res.status=='0'){
+                                return '<span  class="layui-bg-green">正常</span>'
+                            }else{
+                                return '<span class="layui-bg-gray">禁用</span>'
+                            }
+                        }
+                    },
+                    {field: 'sort', width: 50, title: '排序号'},
+                    {field: 'createTime', width: 200, title: '创建时间'},
+                {templet: '#auth-state', width: 200, align: 'center', title: '操作'}
+              ]
+            ],
+            done: function () {
+                layer.closeAll('loading');
+            }
+        });
+
+        $('#btn-expand').click(function () {
+            treetable.expandAll('#munu-table');
+        });
+
+        $('#btn-fold').click(function () {
+            treetable.foldAll('#munu-table');
+        });
+
+        //监听弹出框表单提交，massage是修改界面的表单数据'submit(demo11),是修改按钮的绑定
+        function setFormValue(obj,data){
+            console.log(data);
+            if(data.status==1){
+                data.status='off'
+            }else{
+                data.status='on'
+            }
+            form.val("updateSubmit",{
+                "id":data.id,
+                "parentId":data.parentId,
+                "name":data.name,
+                "sort":data.sort,
+                "status":data.status
+            });
+            form.on('submit(updateSubmit)',function (data) {
+                var datas = data.field;
+                if(datas.status=='on'){
+                    datas.status=0;
+                }else{
+                    datas.status=1;
+                }
+                $.ajax({
+                    url:"dept/updateDeptSubmit",
+                    type:"POST",
+                    data:datas,
+                    success:function(result){
+                        if(result.code==200){
+                            layer.msg("修改成功",{
+                                icon:6,
+                                time:500
+                            },function () {
+                                parent.window.location.reload();
+                                var iframeIndex = parent.layer.getFrameIndex(window.name);
+                                parent.layer.close(iframeIndex);
+                            })
+                        }else {
+                            layer.msg("修改失败")
+                        }
+                    }
+                })
+            })
+
+        };
+
+        //监听工具条
+        table.on('tool(munu-table)', function (obj) {
+            var data = obj.data;
+            var layEvent = obj.event;
+            if (layEvent === 'del') {
+                layer.msg('删除'+data.id);
+                layer.confirm('真的要删除吗',function (index) {
+                    $.ajax({
+                        url:'dept/deleteDeptByID',
+                        type:'post',
+                        data:{id:data.id},
+                        success:function (suc) {
+                            if(suc.code==200){
+                                layer.close(index);
+                                layer.msg("删除成功");
+                                parent.window.location.reload();
+                            }else {
+                                layer.msg("删除失败");
+                            }
+                        }
+                    })
+                })
+            } else if (layEvent === 'edit') {
+                layer.msg('修改'+data.id);
+                layer.open({
+                    type:1,
+                    title:"修改部门",
+                    area: ['50%', '50%'],
+                    content:$("#deptUpdateTest")
+                });
+                setFormValue(obj,data);
+            }else{
+                var index = layer.open({
+                    title: '添加部门',
+                    type: 2,
+                    shade: 0.2,
+                    maxmin:true,
+                    shadeClose: true,
+                    area: ['50%', '50%'],
+                    content: 'addDept?type='+data.type+'&parentId='+data.id,
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+                return false;
+            }
+        });
+    });
+
+</script>
+<div class="layui-form layuimini-form" id="deptUpdateTest" style="display: none" lay-filter="updateSubmit">
+    <input type="hidden" name="parentId">
+    <input type="hidden" name="id">
+    <div class="layui-form-item">
+        <label class="layui-form-label required">部门名称</label>
+        <div class="layui-input-block">
+            <input type="text" name="name" lay-verify="required" lay-reqtext="部门名不能为空" placeholder="请输入部门名称" value="" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">排序号</label>
+        <div class="layui-input-block">
+            <input type="number" name="sort" placeholder="请输入排序号" value="" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">状态</label>
+        <div class="layui-input-block">
+            <input type="checkbox" checked="" name="status" lay-skin="switch" lay-text="ON|OFF">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="updateSubmit">确认修改</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
