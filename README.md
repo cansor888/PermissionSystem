@@ -18,4 +18,4 @@
 
 
 
-![img](https://cdn.jsdelivr.net/gh/cansor888/Daibi-mua-cdn@main/.png)
+![img](https://cdn.jsdelivr.net/gh/cansor888/Daibi-mua-cdn@main/2021-02-23_224422.png)
